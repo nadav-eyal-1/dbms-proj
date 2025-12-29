@@ -33,7 +33,7 @@ def main():
         for row in results:
             print(row)
 
-        print("\n--- Query 4: Historical War Movies (Excluding Comedy) ---")
+        print("\n--- Query 4: Historical War Movies ---")
         results = query_4(cursor)
         for row in results:
             print(row)

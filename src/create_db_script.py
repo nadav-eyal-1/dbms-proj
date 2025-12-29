@@ -130,10 +130,10 @@ def create_indices(cursor):
             """
         ),
         (
-            "fulltext_movies_text",
+            "ft_idx_movie_content",
             """
             ALTER TABLE movies
-            ADD FULLTEXT(title, overview, tagline)
+            ADD FULLTEXT INDEX ft_idx_movie_content (title, overview, tagline)
             """
         )
     ]
