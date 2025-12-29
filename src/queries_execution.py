@@ -18,12 +18,12 @@ def main():
         con = get_connection()
         cursor = con.cursor()
 
-        print("\n--- Query 1: Blockbuster Movies in french ---")
+        print("\n--- Query 1: Blockbuster Movies in French ---")
         results = query_1(cursor, lang_code="fr")
         for row in results:
             print(row)
 
-        print("\n--- Query 2: Top Directors in spanish ---")
+        print("\n--- Query 2: Top Directors in Spanish ---")
         results = query_2(cursor, lang_code="es")
         for row in results:
             print(row)
@@ -33,7 +33,7 @@ def main():
         for row in results:
             print(row)
 
-        print("\n--- Query 4: Historical War Movies (Excluding Comedy) ---")
+        print("\n--- Query 4: Historical War Movies ---")
         results = query_4(cursor)
         for row in results:
             print(row)
@@ -43,8 +43,8 @@ def main():
         for row in results:
             print(row)
 
-    except Exception as e:
-        print(f"Error executing queries: {e}")
+    except Error as e:
+        print(f"Database error: {e}")
 
     finally:
         if 'con' in locals() and con.is_connected():

@@ -120,20 +120,22 @@ def create_indices(cursor):
         (
             "idx_movies_lang_vote",
             """
-            CREATE INDEX idx_movies_lang_vote ON movies(lang_code, vote_average);
+            CREATE INDEX idx_movies_lang_vote 
+            ON movies(lang_code, vote_average);
             """
         ),
         (
             "idx_genres_name",
             """
-            CREATE INDEX idx_genres_name ON genres(name);
+            CREATE INDEX idx_genres_name 
+            ON genres(name);
             """
         ),
         (
-            "fulltext_movies_text",
+            "ft_idx_movie_content",
             """
             ALTER TABLE movies
-            ADD FULLTEXT(title, overview, tagline)
+            ADD FULLTEXT INDEX ft_idx_movie_content (title, overview, tagline)
             """
         )
     ]

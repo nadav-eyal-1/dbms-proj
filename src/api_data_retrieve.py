@@ -81,6 +81,8 @@ def main():
         con = get_connection()
         cursor = con.cursor()
 
+        collected_movies = {lang: set() for lang in LANGUAGES}
+
         seen_genres = set()
         seen_people = set()
 
@@ -88,10 +90,9 @@ def main():
             print(f"\nCollecting movies for language: {lang}")
             insert_language(cursor, lang)
 
-            inserted_count = 0
             page = 1
 
-            while inserted_count < MOVIES_PER_LANGUAGE:
+            while len(collected_movies[lang]) < MOVIES_PER_LANGUAGE:
                 print(f"fetching page number {page}")
                 data = fetch_discover(lang, page)
                 if not data or "results" not in data:
@@ -104,10 +105,12 @@ def main():
                 movie_crew_batch = []
 
                 for basic_movie in data["results"]:
-                    if inserted_count >= MOVIES_PER_LANGUAGE:
+                    if len(collected_movies[lang]) >= MOVIES_PER_LANGUAGE:
                         break
 
                     movie_id = basic_movie["id"]
+                    if movie_id in collected_movies[lang]:
+                        continue
                     movie = fetch_movie_full(movie_id)
                     if not movie:
                         continue
@@ -153,7 +156,7 @@ def main():
                             crew.get("job")
                         ))
 
-                    inserted_count += 1
+                    collected_movies[lang].add(movie_id)
                     time.sleep(0.1)  
 
                 # Execute batch inserts
@@ -195,7 +198,7 @@ def main():
                 if page > data.get("total_pages", 100):
                     break
 
-            print(f"Finished language {lang} with {inserted_count} movies")
+            print(f"Finished language {lang} with {len(collected_movies[lang])} movies")
 
         con.commit()
         print("\nAll data inserted successfully.")
@@ -205,7 +208,7 @@ def main():
         con.rollback()
 
     finally:
-        if con.is_connected():
+        if 'con' in locals() and con.is_connected():
             con.close()
 
 

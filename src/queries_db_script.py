@@ -1,18 +1,22 @@
 def query_1(cursor, lang_code):
     """
-    Returns the number of blockbuster movies in a given non-English language.
+    Returns blockbuster movies in a given non-English language.
     A blockbuster is defined as a movie with a budget higher than the
     average budget of English-language movies.
 
     :param cursor: MySQL cursor object
     :param lang_code: ISO 639-1 language code (e.g., 'fr', 'de', 'sv')
     :return: List of tuples, each containing:
-        (lang_code, lang_name, num_blockbusters)
+        (movie_id, title, release_year, budget, lang_name)
     """
     sql = """
-    SELECT l.lang_code,
-           l.lang_name,
-           COUNT(*) AS num_blockbusters
+    SELECT
+        m.movie_id,
+        m.title,
+        m.original_title,
+        m.release_year,
+        m.budget,
+        l.lang_name
     FROM movies m
     JOIN languages l ON m.lang_code = l.lang_code
     WHERE m.lang_code = %s
@@ -24,9 +28,9 @@ def query_1(cursor, lang_code):
           WHERE lang_code = 'en'
             AND budget IS NOT NULL
       )
-    GROUP BY l.lang_code, l.lang_name;
+    ORDER BY m.budget DESC;
     """
-    cursor.execute(sql, (lang_code, ))
+    cursor.execute(sql, (lang_code,))
     return cursor.fetchall()
 
 def query_2(cursor, lang_code):
@@ -108,24 +112,28 @@ def query_3(cursor, lang_code, genre_name):
 
 def query_4(cursor):
     """
-    Returns movies related to war or historical battles, while excluding comedies.
+    Returns movies related to war or historical battles while excluding some undesired genres.
 
     :param cursor: MySQL cursor object
     :return: List of tuples, each containing:
         (title, overview, release_year)
     """
     sql = """
-    SELECT
-        m.title,
-        m.overview,
-        m.release_year
+    SELECT DISTINCT
+    m.title,
+    m.overview,
+    m.release_year
     FROM movies m
-    JOIN movie_genres mg ON m.movie_id = mg.movie_id
-    JOIN genres g ON mg.genre_id = g.genre_id
     WHERE
-         MATCH(m.title, m.overview, m.tagline)
-            AGAINST('war history battle' IN BOOLEAN MODE)
-      AND g.name <> 'Comedy';
+        MATCH(m.title, m.overview, m.tagline)
+            AGAINST('+history +war' IN BOOLEAN MODE)
+        AND NOT EXISTS (
+            SELECT 1
+            FROM movie_genres mg
+            JOIN genres g ON mg.genre_id = g.genre_id
+            WHERE mg.movie_id = m.movie_id
+            AND g.name IN ('Comedy', 'Science Fiction', 'Fantasy')
+    );
     """
     cursor.execute(sql)
     return cursor.fetchall()
@@ -140,7 +148,7 @@ def query_5(cursor):
         (title, overview, lang_name)
     """
     sql = """
-    SELECT
+    SELECT 
         m.title,
         m.overview,
         l.lang_name
@@ -148,8 +156,9 @@ def query_5(cursor):
     JOIN languages l ON m.lang_code = l.lang_code
     WHERE
         MATCH(m.title, m.overview, m.tagline)
-            AGAINST('dark crime bleak mystery -comedy' IN BOOLEAN MODE)
-      AND m.lang_code = 'sv';
+            AGAINST('noir +crime detective mystery' IN BOOLEAN MODE)
+        AND m.lang_code = 'sv'
+    LIMIT 5;
     """
     cursor.execute(sql)
     return cursor.fetchall()
