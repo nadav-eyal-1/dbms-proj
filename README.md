@@ -1,2 +1,0 @@
-# dbms-proj
-# dbms-proj
